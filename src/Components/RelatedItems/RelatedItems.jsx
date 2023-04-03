@@ -59,15 +59,17 @@ var RelatedItems = ({current, setCurrent}) => {
     }
     getProducts(`${current.id}/styles`)
       .then(results => {
-        results = results.data.results
+        results = results.data.results;
         return results;
       })
       .then(styles => {
         var newOutfit = outfit.slice();
-        var currentWithStyles = Object.assign({}, current);
+        var currentWithStyles = Object.assign({}, current); //only use what you need here
+        //id, name, category, default_price, features, styles [{original_price, sale_price, default?, photos}, ...]
         currentWithStyles.styles = styles;
         newOutfit.push(currentWithStyles);
         setOutfit(newOutfit);
+        localStorage.setItem('outfit', JSON.stringify(newOutfit));
       })
       .catch(err => console.log(err));
   };
@@ -77,7 +79,9 @@ var RelatedItems = ({current, setCurrent}) => {
     var newOutfit = outfit.slice();
     newOutfit.splice(index, 1);
     setOutfit(newOutfit);
+    localStorage.setItem('outfit', JSON.stringify(newOutfit));
   };
+
   function getProducts(suffix) {
     return axios.get(`/products${suffix === undefined ? '' : '/' + suffix}`)
       .catch((err) => {
@@ -97,13 +101,20 @@ var RelatedItems = ({current, setCurrent}) => {
     }
     return getProducts(`${current.id}/related`)
       .then(res => {
-        // console.log('response: ', res);
         let relatedIds = uniq(res.data);
         relatedIds = relatedIds.map(id => getProducts(id));
         return Promise.all(relatedIds)
       })
       .then(results => {
-        results = results.map(result => result.data);
+        results = results.map(result => {
+          return {
+            id: result.data.id,
+            name: result.data.name,
+            category: result.data.category,
+            default_price: result.data.default_price,
+            features: result.data.features
+          }
+        });
         rel = results;
         return results;
       })
@@ -112,7 +123,14 @@ var RelatedItems = ({current, setCurrent}) => {
       })
       .then(results => {
         results = results.map(result => {
-          return result.data.results;
+          return result.data.results.map(style => {
+            return {
+              original_price: style.original_price,
+              sale_price: style.sale_price,
+              'default?': style['default?'],
+              photos: style.photos
+            }
+          })
         })
         return results;
       })
@@ -132,15 +150,11 @@ var RelatedItems = ({current, setCurrent}) => {
       getProducts('37311')
         .then(res => setCurrent(res.data))
     }
-    axios.get('/outfit')
-      .then(res => {
-        if (res.data.length) {
-          setOutfit(res.data);
-        }
-      })
-      .catch(err => {
-        console.log(err);
-      })
+    var outfit = JSON.parse(localStorage.getItem('outfit'));
+    if (outfit !== null) {
+      setOutfit(outfit);
+      console.log(outfit)
+    }
   }, []);
 
   useEffect(() => {
@@ -150,24 +164,33 @@ var RelatedItems = ({current, setCurrent}) => {
   }, [current]);
 
   useEffect(() => {
-    if(outfit.length) {
-      axios.post('/outfit', outfit)
-        .catch(err => {
-          console.log(err);
-        })
-    }
-  }, [outfit]);
+
+  }, [outfit])
 
   return (
     <div style={componentStyle} >
       <ElementContext.Provider value='ri-modal'>
-        <RelatedItemsModal open={open} setOpen={setOpen} comparison={comparison} />
+        <RelatedItemsModal
+          open={open}
+          setOpen={setOpen}
+          comparison={comparison}
+        />
       </ElementContext.Provider>
       <ElementContext.Provider value='ri-list'>
-        <RelatedItemsList related={related} setCurrentById={setCurrentById} openComparisonModal={openComparisonModal} />
+        <RelatedItemsList
+          related={related}
+          setCurrentById={setCurrentById}
+          openComparisonModal={openComparisonModal}
+        />
       </ElementContext.Provider>
       <ElementContext.Provider value='ri-outfit-list'>
-        <YourOutfitList current={current} outfit={outfit} setCurrentById={setCurrentById} addToOutfit={addToOutfit} removeFromOutfit={removeFromOutfit} />
+        <YourOutfitList
+          current={current}
+          outfit={outfit}
+          setCurrentById={setCurrentById}
+          addToOutfit={addToOutfit}
+          removeFromOutfit={removeFromOutfit}
+        />
       </ElementContext.Provider>
     </div>
   );
