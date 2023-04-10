@@ -1,19 +1,33 @@
 const API = require('./API.js');
 
-const getReviews = (req, res) => { //console.log('in getReviews')
-  const params = req.query;
-  API.getReviews(params, (err, reviews) => {
+//********************** Products and Styles ****************************/
+
+const getProducts = (req, res) => {
+  const params = req.params;
+  params.id = params.id === undefined ? '' : req.params.id;
+  params.related = params.related === undefined ? '' : req.params.related;
+  API.getProducts(params, (err, products) => {
     if (err) {
       res.status(500).send(err);
     } else {
-      res.status(200).send(reviews);
+      res.status(200).send(products);
+    }
+  })
+};
+const getStyles = (req, res) => {
+  let params = req.query;
+  let id = params.product_id;
+  API.getStyles(id, (err, styles) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.status(200).send(styles)
     }
   })
 };
 
-
-
 //**********************Question and Answers ****************************/
+
 const getQuestions = (req, res) => {
   const params = req.query;
   API.getQuestions(params, (err, questions) => {
@@ -33,7 +47,7 @@ const updateQuestionHelpful = (req, res) => {
       res.status(200).send(result);
     }
   })
-}
+};
 const updateQuestionReport = (req, res) => {
   const params = req.params;
   API.updateQuestionReport(params, (err, result) => {
@@ -43,7 +57,7 @@ const updateQuestionReport = (req, res) => {
       res.status(200).send(result);
     }
   })
-}
+};
 const updateAnswerHelpful = (req, res) => {
   const params = req.params;
   API.updateAnswerHelpful(params, (err, result) => {
@@ -53,7 +67,7 @@ const updateAnswerHelpful = (req, res) => {
       res.status(200).send(result);
     }
   })
-}
+};
 const updateAnswerReport = (req, res) => {
   const params = req.params;
   API.updateAnswerReport(params, (err, result) => {
@@ -63,8 +77,7 @@ const updateAnswerReport = (req, res) => {
       res.status(200).send(result);
     }
   })
-}
-
+};
 const submitAnswer = (req, res) => {
   const body = req.body;
   API.submitAnswer(body, (err, result) => {
@@ -74,10 +87,8 @@ const submitAnswer = (req, res) => {
       res.status(200).send(result);
     }
   })
-}
-
+};
 const submitQuestion = (req, res) => {
-  console.log('submit Question controller', req.body)
   const body = req.body
   API.submitQuestion(body, (err, result) => {
     if(err) {
@@ -86,49 +97,20 @@ const submitQuestion = (req, res) => {
       res.status(200).send(result);
     }
   })
-}
+};
 
+//********************** Ratings and Reviews ****************************/
 
-
-
-
-
-
-
-const getProducts = (req, res) => {
-  const params = req.params;
-  params.id = params.id === undefined ? '' : req.params.id;
-  params.related = params.related === undefined ? '' : req.params.related;
-  // console.log('params', params);
-  API.getProducts(params, (err, products) => {
+const getReviews = (req, res) => {
+  const params = req.query;
+  API.getReviews(params, (err, reviews) => {
     if (err) {
       res.status(500).send(err);
     } else {
-      res.status(200).send(products);
+      res.status(200).send(reviews);
     }
   })
 };
-
-const getStyles = (req, res) => { //console.log('IN CONTROLLERS:', req.query)
-  let params = req.query;
-
-  let id = params.product_id; //console.log(id);
-  API.getStyles(id, (err, styles) => {
-
-    if (err) {
-      res.status(500).send(err);
-    } else {
-
-      res.status(200).send(styles)
-
-    }
-  })
-
-}
-
-
-
-
 const updateReviewHelpful = (req, res) => {
   const params = req.body.params;
   //console.log('running')
@@ -139,7 +121,7 @@ const updateReviewHelpful = (req, res) => {
       res.status(204).send();
     }
   })
-}
+};
 const getReviewsMeta = (req, res) => {
   const params = req.query;
   API.getReviewsMeta(params, (err, reviews) => {
@@ -160,7 +142,7 @@ const postForm = (req, res) => {
       res.status(201).send();
     }
   })
-}
+};
 const postInteraction = (req, res) => {
   API.postInteraction(req.body, (err, data) => {
     if (err) {
@@ -169,7 +151,7 @@ const postInteraction = (req, res) => {
       res.status(201).send();
     }
   })
-}
+};
 
 module.exports = {
   getReviews,
